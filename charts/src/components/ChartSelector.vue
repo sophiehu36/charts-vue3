@@ -15,9 +15,9 @@ export default {
 	name: "ChartSelector",
 	setup(props, { emit }) {
 		const chartTypes = [
-			{ label: "柱状图", value: "Histogram" },
-			{ label: "饼图", value: "PieChart" },
-			{ label: "折线图", value: "LineChart" },
+			{ label: "柱状图", value: "histogram" },
+			{ label: "饼图", value: "pie" },
+			{ label: "折线图", value: "line" },
 		];
 		const handleChartSelect = (value) => {
 			emit("add-chart", value);
