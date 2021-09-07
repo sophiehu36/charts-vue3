@@ -3,6 +3,7 @@
 </template>
 
 <script>
+import { computed, watchEffect } from "vue";
 import * as echarts from "echarts";
 
 export default {
@@ -11,14 +12,19 @@ export default {
 	setup(props) {
 		// console.log(props.id)
 		const createChart = () => {
-			var chartDom = document.getElementById(props.chartId);
-			var myChart = echarts.init(chartDom);
-			var option;
-
-			option = props.option;
-
-			option && myChart.setOption(option);
+			const chartDom = document.getElementById(props.chartId);
+			const myChart = echarts.init(chartDom);
+			const option = computed(() => props.option);
+			option.value && myChart.setOption(option.value);
 		};
+		watchEffect(
+			() => {
+				createChart();
+			},
+			{
+				flush: "post",
+			}
+		);
 		return { createChart };
 	},
 	mounted() {

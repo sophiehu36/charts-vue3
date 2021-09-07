@@ -1,25 +1,48 @@
 <template>
-	<ChartSelector class="left" @add-chart="handleChartAdd"></ChartSelector>
+	<ChartSelector class="left" @add-chart="handleChartAdd" />
 	<div class="center">
-		<Chart
-			v-for="item in componentList"
-			:chart-id="item.name + item.id"
-			:key="item.id"
-			:option="item.option"
-		></Chart>
+		<draggable
+			:list="componentList"
+			:disabled="!enabled"
+			item-key="id"
+			class="list-group"
+			ghost-class="ghost"
+			:move="checkMove"
+			@start="dragging = true"
+			@end="dragging = false"
+		>
+			<template #item="{ element }">
+				<Chart
+					:chart-id="element.name + element.id"
+					:option="element.option"
+					@click="handleChartSelect(element)"
+				></Chart>
+			</template>
+		</draggable>
 	</div>
-	<div class="right">right</div>
+	<ChartSettings
+		class="right"
+		:option="chartOption"
+		@change-option="handleOptionChange"
+	/>
 </template>
 
 <script>
 import { ref } from "vue";
-import ChartSelector from "@/components/ChartSelector.vue";
+import draggable from "vuedraggable";
 import Chart from "./components/Chart.vue";
+import ChartSelector from "@/components/ChartSelector.vue";
+import ChartSettings from "@/components/ChartSettings.vue";
 
 export default {
 	name: "App",
-	components: { ChartSelector, Chart },
+	display: "Simple",
+	order: 0,
+	components: { ChartSelector, ChartSettings, Chart, draggable },
 	setup() {
+		const enabled = ref(true);
+		const dragging = ref(false);
+		const id = ref(1);
 		const options = {
 			histogram: {
 				xAxis: {
@@ -95,12 +118,12 @@ export default {
 			{
 				name: "histogram",
 				option: options.histogram,
-				id: "0",
+				id: 0,
 			},
 			{
 				name: "pie",
 				option: options.pie,
-				id: "1",
+				id: 1,
 			},
 		]);
 		const addComponent = (v) => {
@@ -108,15 +131,34 @@ export default {
 			componentList.value.push({
 				name: v,
 				option: options[v],
-				id: componentList.value.length,
+				id: ++id.value, //id是最后一项的id+1
 			});
 			console.log(componentList);
 		};
-		return { componentList, addComponent };
+		const chartOption = ref({});
+		return { enabled, dragging, componentList, chartOption, addComponent };
 	},
 	methods: {
 		handleChartAdd(v) {
 			this.addComponent(v);
+		},
+		checkMove: function(e) {
+			window.console.log("Future index: " + e.draggedContext.futureIndex);
+		},
+		handleChartSelect(e) {
+			console.log("select", e.option, this.chartOption);
+			this.chartOption.value = e.option;
+			this.chartOption.value.id = e.id;
+		},
+		handleOptionChange(e) {
+			console.log("e", JSON.parse(e));
+			const el = JSON.parse(e);
+			let index;
+			for (let i in this.componentList) {
+				if (this.componentList[i].id == el.id) index = i;
+			}
+			this.componentList[index].option = el;
+			console.log(this.componentList[index]);
 		},
 	},
 };
@@ -145,20 +187,35 @@ export default {
 
 .left {
 	padding: 60px;
+  background: lightgrey;
 }
 
 .center {
 	border-left: 1px solid black;
 	border-right: 1px solid black;
 	flex: 1;
-	padding: 0 60px;
+	padding: 0 50px;
 	overflow-y: auto;
+}
+
+.list-group {
 	display: flex;
 	flex-wrap: wrap;
 }
 
-.center > div {
+.list-group > div {
 	width: 400px;
 	height: 400px;
 }
+
+.right label {
+	display: block;
+	text-align: left;
+	padding-left: 30px;
+}
+
+.right input {
+	width: 90%;
+}
+
 </style>
