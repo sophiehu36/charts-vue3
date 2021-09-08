@@ -1,5 +1,9 @@
 <template>
-	<div :id="chartId"></div>
+	<div>
+		<slot></slot>
+		<div :id="chartId" class="list-group-item" v-if="chartId"></div>
+		<div v-else class="list-group-item"></div>
+	</div>
 </template>
 
 <script>
@@ -12,10 +16,12 @@ export default {
 	setup(props) {
 		// console.log(props.id)
 		const createChart = () => {
-			const chartDom = document.getElementById(props.chartId);
-			const myChart = echarts.init(chartDom);
-			const option = computed(() => props.option);
-			option.value && myChart.setOption(option.value);
+			if (props.chartId) {
+				const chartDom = document.getElementById(props.chartId);
+				const myChart = echarts.init(chartDom);
+				const option = computed(() => props.option);
+				option.value && myChart.setOption(option.value);
+			}
 		};
 		watchEffect(
 			() => {
@@ -26,9 +32,6 @@ export default {
 			}
 		);
 		return { createChart };
-	},
-	mounted() {
-		this.createChart();
 	},
 };
 </script>

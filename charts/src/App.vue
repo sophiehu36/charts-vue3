@@ -1,28 +1,44 @@
 <template>
-	<ChartSelector class="left" @add-chart="handleChartAdd" />
-	<div class="center">
+	<div class="left">
 		<draggable
-			:list="componentList"
-			:disabled="!enabled"
+			class="dragArea list-group selection"
+			:list="selection"
+			:group="{ name: 'chart', pull: 'clone', put: false }"
+			@change="log"
+			:clone="cloneChart"
+			:move="onMove"
 			item-key="id"
-			class="list-group"
-			ghost-class="ghost"
-			:move="checkMove"
-			@start="dragging = true"
-			@end="dragging = false"
 		>
 			<template #item="{ element }">
-				<Chart
-					:chart-id="element.name + element.id"
-					:option="element.option"
-					@click="handleChartSelect(element)"
-				></Chart>
+				<Chart :chart-id="element.id" :option="element.option"
+					><p>{{ element.name }}</p></Chart
+				>
 			</template>
 		</draggable>
+	</div>
+	<div class="center">
+		<template v-for="(value, name) in lists" :key="name">
+			<draggable
+				class="dragArea list-group"
+				:list="value"
+				group="chart"
+				@change="log"
+				item-key="id"
+			>
+				<template #item="{ element }">
+					<Chart
+						:chart-id="element.id"
+						:option="element.option"
+						@click="handleChartSelect(element, name)"
+					/>
+				</template>
+			</draggable>
+		</template>
 	</div>
 	<ChartSettings
 		class="right"
 		:option="chartOption"
+		:info="chartInfo"
 		@change-option="handleOptionChange"
 	/>
 </template>
@@ -31,18 +47,15 @@
 import { ref } from "vue";
 import draggable from "vuedraggable";
 import Chart from "./components/Chart.vue";
-import ChartSelector from "@/components/ChartSelector.vue";
 import ChartSettings from "@/components/ChartSettings.vue";
+let idGlobal = 4;
 
 export default {
 	name: "App",
-	display: "Simple",
-	order: 0,
-	components: { ChartSelector, ChartSettings, Chart, draggable },
+	lists: "Custom Clone",
+	order: 2,
+	components: { draggable, Chart, ChartSettings },
 	setup() {
-		const enabled = ref(true);
-		const dragging = ref(false);
-		const id = ref(1);
 		const options = {
 			histogram: {
 				xAxis: {
@@ -114,51 +127,50 @@ export default {
 				],
 			},
 		};
-		const componentList = ref([
-			{
-				name: "histogram",
-				option: options.histogram,
-				id: 0,
-			},
-			{
-				name: "pie",
-				option: options.pie,
-				id: 1,
-			},
-		]);
-		const addComponent = (v) => {
-			console.log(v);
-			componentList.value.push({
-				name: v,
-				option: options[v],
-				id: ++id.value, //id是最后一项的id+1
-			});
-			console.log(componentList);
-		};
+		const selection = [
+			{ name: "histogram", id: 1, option: options.histogram },
+			{ name: "pie", id: 2, option: options.pie },
+			{ name: "line", id: 3, option: options.line },
+		];
+		const lists = ref({ list: [], list2: [], list3: [], list4: [] });
 		const chartOption = ref({});
-		return { enabled, dragging, componentList, chartOption, addComponent };
+		const chartInfo = ref({});
+		return { selection, lists, chartOption, chartInfo };
 	},
 	methods: {
-		handleChartAdd(v) {
-			this.addComponent(v);
+		log: function(evt) {
+			window.console.log(evt);
 		},
-		checkMove: function(e) {
-			window.console.log("Future index: " + e.draggedContext.futureIndex);
+		cloneChart({ option, name }) {
+			return {
+				id: idGlobal++,
+				name,
+				option,
+			};
 		},
-		handleChartSelect(e) {
-			console.log("select", e.option, this.chartOption);
+		handleChartSelect(e, n) {
+			// console.log("select", e, this.chartOption, n);
 			this.chartOption.value = e.option;
-			this.chartOption.value.id = e.id;
+			this.chartInfo.value = { id: e.id, name: n };
 		},
-		handleOptionChange(e) {
-			console.log("e", JSON.parse(e));
+		handleOptionChange(e, info) {
+			// console.log("e", JSON.parse(e), info.value.name);
 			const el = JSON.parse(e);
+			const name = info.value.name;
+			const id = info.value.id;
 			let index;
-			for (let i in this.componentList) {
-				if (this.componentList[i].id == el.id) index = i;
+			for (let i in this.lists[name]) {
+				if (this.lists[name][i].id == id) {
+					index = i;
+				}
 			}
-			this.componentList[index].option = el;
-			console.log(this.componentList[index]);
+			this.lists[name][index].option = el;
+		},
+		onMove(e) {
+			if (e.to.classList.contains("selection")) {
+				return false;
+			}
+			return true;
 		},
 	},
 };
@@ -183,11 +195,26 @@ export default {
 	box-sizing: border-box;
 	width: 20%;
 	height: 100%;
+	overflow-y: auto;
 }
 
 .left {
-	padding: 60px;
-  background: lightgrey;
+	padding: 10px 0px;
+	background: lightgrey;
+	display: flex;
+	justify-content: center;
+}
+
+.left p {
+	padding: 10px 0 0 0;
+	margin: 0;
+}
+
+.left .list-group-item {
+	transform: scale(70%);
+	width: 280px;
+	height: 280px;
+	padding: 0;
 }
 
 .center {
@@ -195,17 +222,27 @@ export default {
 	border-right: 1px solid black;
 	flex: 1;
 	padding: 0 50px;
-	overflow-y: auto;
-}
-
-.list-group {
 	display: flex;
 	flex-wrap: wrap;
 }
 
-.list-group > div {
+.center .list-group-item {
 	width: 400px;
 	height: 400px;
+	position: relative;
+}
+
+.dragArea {
+	width: 50%;
+	height: auto;
+	/* background: chartreuse; */
+}
+
+.list-group {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
 }
 
 .right label {
@@ -217,5 +254,4 @@ export default {
 .right input {
 	width: 90%;
 }
-
 </style>
