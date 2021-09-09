@@ -5,6 +5,8 @@
 			:list="selection"
 			:group="{ name: 'chart', pull: 'clone', put: false }"
 			@change="log"
+			@end="handleEnd"
+			@mousemove="handleDragOver"
 			:clone="cloneChart"
 			:move="onMove"
 			item-key="id"
@@ -23,6 +25,8 @@
 				:list="value"
 				group="chart"
 				@change="log"
+				@end="handleEnd"
+				@mousemove="handleDragOver"
 				item-key="id"
 			>
 				<template #item="{ element }">
@@ -132,14 +136,19 @@ export default {
 			{ name: "pie", id: 2, option: options.pie },
 			{ name: "line", id: 3, option: options.line },
 		];
-		const lists = ref({ list: [], list2: [], list3: [], list4: [] });
+		const lists = ref({ list: [] });
 		const chartOption = ref({});
 		const chartInfo = ref({});
-		return { selection, lists, chartOption, chartInfo };
+		const moveItem = ref({});
+		return { selection, lists, moveItem, chartOption, chartInfo };
 	},
 	methods: {
 		log: function(evt) {
 			window.console.log(evt);
+			if (evt.added) {
+				console.log(this.moveItem, evt.added.element);
+				this.moveItem.id = evt.added.element.id;
+			}
 		},
 		cloneChart({ option, name }) {
 			return {
@@ -167,10 +176,25 @@ export default {
 			this.lists[name][index].option = el;
 		},
 		onMove(e) {
+			console.log(e);
 			if (e.to.classList.contains("selection")) {
 				return false;
 			}
 			return true;
+		},
+		handleDragOver(e) {
+			// console.log("dragover", e);
+			// console.log(this.moveItem);
+			this.moveItem.x = e.x;
+			this.moveItem.y = e.y;
+		},
+		handleEnd(e) {
+			console.log("end", e);
+			// const { id, x, y } = this.moveItem;
+			// const ele = document.getElementById(id);
+			// ele.style.position = "absolute";
+			// ele.style.top = `${x -280}px`;
+			// ele.style.left = `${y -280}px`;
 		},
 	},
 };
@@ -210,6 +234,11 @@ export default {
 	margin: 0;
 }
 
+.left .list-group {
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
 .left .list-group-item {
 	transform: scale(70%);
 	width: 280px;
@@ -229,12 +258,11 @@ export default {
 .center .list-group-item {
 	width: 400px;
 	height: 400px;
-	position: relative;
 }
 
 .dragArea {
-	width: 50%;
-	height: auto;
+	width: 100%;
+	height: 100%;
 	/* background: chartreuse; */
 }
 
@@ -242,7 +270,6 @@ export default {
 	position: relative;
 	display: flex;
 	flex-wrap: wrap;
-	justify-content: center;
 }
 
 .right label {
