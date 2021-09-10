@@ -131,8 +131,8 @@ export default {
 }
 
 .center {
-	border-left: 1px solid black;
-	border-right: 1px solid black;
+	border-left: 3px solid #d0d0d5;
+	border-right: 3px solid #d0d0d5;
 	flex: 1;
 	padding: 0 50px;
 	/* display: flex;
