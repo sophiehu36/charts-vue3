@@ -34,25 +34,30 @@ export default {
 	name: "Chart",
 	props: ["chartId", "option", "dragClass"],
 	setup(props) {
+		let myChart;
+		let option;
 		// console.log(props.id)
 		const createChart = () => {
 			if (props.chartId) {
 				const chartDom = document.getElementById(props.chartId);
-				const myChart = echarts.init(chartDom);
-				const option = computed(() => props.option);
+				myChart = echarts.init(chartDom);
+				option = computed(() => props.option);
 				option.value && myChart.setOption(option.value);
+				watchEffect(
+					() => {
+						myChart.setOption(option.value);
+					},
+					{
+						flush: "post",
+					}
+				);
 			}
 		};
-		watchEffect(
-			() => {
-				createChart();
-			},
-			{
-				flush: "post",
-			}
-		);
 		return { createChart };
 	},
+  mounted() {
+    this.createChart()
+  },
 };
 </script>
 
@@ -63,6 +68,6 @@ export default {
 	padding: 4%;
 	touch-action: none;
 	user-select: none;
-  overflow: hidden;
+	overflow: hidden;
 }
 </style>
