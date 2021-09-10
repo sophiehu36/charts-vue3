@@ -7,7 +7,6 @@
 			:class="dragClass"
 			v-if="chartId"
 		></div>
-		<div v-else class="list-group-item"></div>
 	</div>
 </template>
 
@@ -59,14 +58,11 @@ export default {
 
 <style scoped>
 .list-group-item {
-	/* width: 25%;
-	min-height: 6.5em; */
 	margin: 0.1rem 0 0 0.1rem;
 	border-radius: 0.75em;
 	padding: 4%;
 	touch-action: none;
 	user-select: none;
   overflow: hidden;
-  cursor: move;
 }
 </style>
