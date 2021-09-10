@@ -10,7 +10,7 @@
 import { ref } from "vue";
 export default {
 	name: "ChartSettings",
-	props: ["option", 'info'],
+	props: ["option", "info"],
 	setup(props) {
 		// console.log(props.option);
 		const settings = props.option || ref({});
